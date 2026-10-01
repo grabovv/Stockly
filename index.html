@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stockly - Simple Inventory Manager</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a2f;
+      --panel-2:#18233d;
+      --muted:#8f9bb3;
+      --text:#eef2ff;
+      --line:#263452;
+      --accent:#7c8cff;
+      --accent-2:#5eead4;
+      --danger:#ff6b81;
+      --warning:#f7c948;
+      --ok:#46d39a;
+      --shadow:0 18px 50px rgba(0,0,0,.28);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(124,140,255,.16), transparent 30%),
+        radial-gradient(circle at top right, rgba(94,234,212,.08), transparent 25%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    img{max-width:100%;display:block}
+
+    .app{
+      width:min(1180px, calc(100% - 32px));
+      margin:0 auto;
+      padding:32px 0 56px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      align-items:center;
+      margin-bottom:26px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .logo{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      box-shadow:0 12px 30px rgba(124,140,255,.3);
+      font-weight:800;
+      color:#08101d;
+      font-size:21px;
+    }
+
+    .brand h1{margin:0;font-size:24px;letter-spacing:-.04em}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:var(--panel);
+      color:var(--text);
+      padding:11px 15px;
+      border-radius:13px;
+      font-weight:700;
+      transition:.18s ease;
+      box-shadow:0 5px 18px rgba(0,0,0,.12);
+    }
+
+    .btn:hover{transform:translateY(-1px);border-color:#3a4b71}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--accent),#6574eb);
+      border:none;
+      color:white;
+    }
+    .btn.danger{color:#ffd8df;border-color:#5d2e3b}
+    .btn.small{padding:8px 10px;border-radius:10px;font-size:13px}
+    .btn.ghost{background:transparent;box-shadow:none}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .stat{
+      background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01)), var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:19px;
+      box-shadow:var(--shadow);
+    }
+
+    .stat .label{color:var(--muted);font-size:13px}
+    .stat .value{font-size:29px;font-weight:800;margin-top:7px;letter-spacing:-.04em}
+    .stat .sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+    .toolbar{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+      display:flex;
+      gap:10px;
+      margin-bottom:14px;
+      align-items:center;
+      box-shadow:var(--shadow);
+    }
+
+    .search{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:0 13px;
+    }
+
+    .search input{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      padding:12px 0;
+    }
+
+    .search input::placeholder{color:#70809e}
+
+    select{
+      color:var(--text);
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:11px 12px;
+      outline:none;
+    }
+
+    .table-wrap{
+      overflow:hidden;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    thead th{
+      text-align:left;
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:#10182a;
+    }
+
+    tbody td{
+      padding:14px 16px;
+      border-bottom:1px solid rgba(38,52,82,.7);
+      vertical-align:middle;
+    }
+
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,.018)}
+
+    .product-cell{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .thumb{
+      width:50px;height:50px;border-radius:13px;
+      object-fit:cover;
+      background:linear-gradient(135deg,#243251,#151f36);
+      border:1px solid var(--line);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+
+    .thumb.placeholder{font-size:22px;color:#647294}
+    .product-name{font-weight:800}
+    .product-meta{font-size:12px;color:var(--muted);margin-top:4px}
+
+    .qty-wrap{
+      display:inline-flex;
+      align-items:center;
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+      background:var(--panel-2);
+    }
+
+    .qty-btn{
+      width:34px;height:34px;
+      border:0;background:transparent;color:var(--text);
+      font-size:18px;
+    }
+
+    .qty-btn:hover{background:rgba(255,255,255,.05)}
+    .qty-value{min-width:46px;text-align:center;font-weight:800}
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      font-size:12px;
+      padding:6px 9px;
+      border-radius:999px;
+      background:#16253b;
+      color:#b7c4df;
+      border:1px solid #2d4465;
+    }
+
+    .badge.low{background:#382d14;color:#ffe09a;border-color:#675221}
+    .badge.out{background:#3c1e29;color:#ffb4c2;border-color:#6b3143}
+    .badge.ok{background:#17342c;color:#9ef0ce;border-color:#2b5a4b}
+
+    .row-actions{display:flex;gap:7px;justify-content:flex-end}
+
+    .empty{
+      padding:60px 20px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .empty .icon{font-size:42px;margin-bottom:12px}
+
+    .modal-backdrop{
+      position:fixed;inset:0;
+      background:rgba(4,8,16,.72);
+      backdrop-filter:blur(7px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:50;
+    }
+
+    .modal-backdrop.open{display:flex}
+
+    .modal{
+      width:min(560px,100%);
+      background:#111a2d;
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:0 28px 80px rgba(0,0,0,.46);
+      overflow:hidden;
+    }
+
+    .modal-head,.modal-foot{
+      padding:18px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .modal-head{border-bottom:1px solid var(--line)}
+    .modal-foot{border-top:1px solid var(--line);justify-content:flex-end}
+    .modal-head h2{margin:0;font-size:19px}
+    .modal-body{padding:20px}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{display:flex;flex-direction:column;gap:7px}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:12px;color:var(--muted);font-weight:700}
+    .field input,.field select{
+      background:var(--panel-2);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
+    }
+
+    .field input:focus,.field select:focus{border-color:#6273b8}
+
+    .image-preview{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:12px;
+      border:1px dashed #3a4a6e;
+      border-radius:14px;
+      background:#111a2a;
+    }
+
+    .image-preview img{
+      width:72px;height:72px;border-radius:12px;object-fit:cover;
+      border:1px solid var(--line);
+    }
+
+    .toast{
+      position:fixed;
+      right:20px;bottom:20px;
+      background:#131e33;
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:12px 15px;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      opacity:0;
+      transform:translateY(10px);
+      pointer-events:none;
+      transition:.2s ease;
+      z-index:100;
+      max-width:340px;
+    }
+
+    .toast.show{opacity:1;transform:none}
+
+    .footer-note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:14px;
+      text-align:center;
+    }
+
+    @media(max-width:1000px){
+      .app{
+        width:min(100% - 24px,1180px);
+        padding:24px 0 40px;
+      }
+
+      .stats{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+
+      .topbar{
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+      .top-actions{
+        width:100%;
+        justify-content:flex-start;
+      }
+
+      .toolbar{
+        align-items:stretch;
+        flex-wrap:wrap;
+      }
+
+      .search{
+        flex:1 1 100%;
+      }
+
+      .toolbar select{
+        flex:1 1 220px;
+      }
+
+      .table-wrap{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      table{
+        min-width:760px;
+      }
+    }
+
+    @media(max-width:700px){
+      .app{
+        width:min(100% - 16px,1180px);
+        padding:16px 0 28px;
+      }
+
+      .brand{
+        align-items:flex-start;
+      }
+
+      .brand h1{
+        font-size:21px;
+      }
+
+      .brand p{
+        font-size:12px;
+        line-height:1.45;
+      }
+
+      .logo{
+        width:42px;
+        height:42px;
+        border-radius:12px;
+        font-size:19px;
+      }
+
+      .top-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+      }
+
+      .top-actions .btn{
+        width:100%;
+        min-width:0;
+        padding:10px 12px;
+      }
+
+      .stats{
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+      }
+
+      .stat{
+        padding:15px;
+        border-radius:16px;
+      }
+
+      .stat .value{
+        font-size:24px;
+      }
+
+      .toolbar{
+        padding:10px;
+        gap:8px;
+        border-radius:16px;
+      }
+
+      .toolbar select{
+        flex:1 1 100%;
+        width:100%;
+      }
+
+      .search{
+        min-width:0;
+      }
+
+      .modal-backdrop{
+        padding:10px;
+        align-items:flex-start;
+        overflow-y:auto;
+      }
+
+      .modal{
+        width:100%;
+        max-width:560px;
+        margin:10px 0;
+        border-radius:18px;
+      }
+
+      .modal-head,
+      .modal-foot{
+        padding:14px 15px;
+      }
+
+      .modal-body{
+        padding:15px;
+      }
+
+      .form-grid{
+        grid-template-columns:1fr;
+        gap:12px;
+      }
+
+      .field.full{
+        grid-column:auto;
+      }
+
+      .image-preview{
+        align-items:flex-start;
+      }
+    }
+
+    @media(max-width:480px){
+      .top-actions{
+        grid-template-columns:1fr;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .stat{
+        padding:14px;
+      }
+
+      .stat .value{
+        font-size:22px;
+      }
+
+      .search{
+        padding:0 10px;
+      }
+
+      .search input,
+      select,
+      .field input,
+      .field select{
+        font-size:16px;
+      }
+
+      .modal-head{
+        align-items:flex-start;
+      }
+
+      .modal-foot{
+        flex-direction:column-reverse;
+        align-items:stretch;
+      }
+
+      .modal-foot .btn{
+        width:100%;
+      }
+
+      .image-preview{
+        flex-direction:column;
+      }
+
+      .image-preview img{
+        width:100%;
+        height:auto;
+        max-height:220px;
+      }
+
+      .footer-note{
+        line-height:1.5;
+        padding:0 4px;
+      }
+    }
+
+
+    /* Mobile-first improvements */
+    @media(max-width:700px){
+      html,body{
+        overflow-x:hidden;
+      }
+
+      body{
+        -webkit-tap-highlight-color:transparent;
+      }
+
+      .app{
+        width:100%;
+        padding:12px;
+      }
+
+      .topbar{
+        gap:14px;
+        margin-bottom:16px;
+      }
+
+      .brand{
+        width:100%;
+      }
+
+      .brand > div:last-child{
+        min-width:0;
+      }
+
+      .brand p{
+        overflow-wrap:anywhere;
+      }
+
+      .top-actions{
+        grid-template-columns:1fr 1fr;
+        width:100%;
+      }
+
+      .top-actions .btn{
+        min-height:46px;
+      }
+
+      .stats{
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+        margin-bottom:12px;
+      }
+
+      .stat{
+        min-width:0;
+        box-shadow:none;
+      }
+
+      .stat .label,
+      .stat .sub{
+        line-height:1.35;
+      }
+
+      .toolbar{
+        box-shadow:none;
+        margin-bottom:12px;
+      }
+
+      .search,
+      .toolbar select{
+        min-height:46px;
+      }
+
+      .table-wrap{
+        overflow:visible;
+        border:none;
+        background:transparent;
+        box-shadow:none;
+        border-radius:0;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td{
+        display:block;
+        width:100%;
+      }
+
+      table{
+        min-width:0!important;
+      }
+
+      thead{
+        display:none;
+      }
+
+      tbody{
+        display:grid;
+        gap:10px;
+      }
+
+      tbody tr{
+        background:var(--panel);
+        border:1px solid var(--line);
+        border-radius:16px;
+        box-shadow:0 8px 22px rgba(0,0,0,.14);
+        overflow:hidden;
+      }
+
+      tbody tr:hover{
+        background:var(--panel);
+      }
+
+      tbody td{
+        position:relative;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:14px;
+        min-height:48px;
+        padding:11px 13px;
+        border-bottom:1px solid rgba(38,52,82,.7);
+        text-align:right;
+      }
+
+      tbody td::before{
+        content:attr(data-label);
+        flex:0 0 82px;
+        color:var(--muted);
+        font-size:11px;
+        font-weight:800;
+        letter-spacing:.06em;
+        text-transform:uppercase;
+        text-align:left;
+      }
+
+      tbody td:first-child{
+        display:block;
+        padding:14px;
+        text-align:left;
+      }
+
+      tbody td:first-child::before{
+        display:none;
+      }
+
+      tbody td:last-child{
+        border-bottom:0;
+      }
+
+      .product-cell{
+        align-items:center;
+        gap:11px;
+      }
+
+      .thumb{
+        width:54px;
+        height:54px;
+        border-radius:12px;
+      }
+
+      .product-name{
+        font-size:15px;
+        line-height:1.25;
+        overflow-wrap:anywhere;
+      }
+
+      .product-meta{
+        margin-top:3px;
+      }
+
+      .badge{
+        max-width:60%;
+        justify-content:center;
+        text-align:center;
+      }
+
+      .qty-wrap{
+        min-height:42px;
+      }
+
+      .qty-btn{
+        width:44px;
+        height:42px;
+        font-size:22px;
+        touch-action:manipulation;
+      }
+
+      .qty-value{
+        min-width:76px;
+      }
+
+      .row-actions{
+        width:100%;
+        justify-content:flex-end;
+        gap:8px;
+      }
+
+      .row-actions .btn{
+        min-height:42px;
+        flex:1;
+      }
+
+      .empty{
+        background:var(--panel);
+        border:1px solid var(--line);
+        border-radius:16px;
+        padding:42px 18px;
+      }
+
+      .modal-backdrop{
+        padding:0;
+        align-items:stretch;
+      }
+
+      .modal{
+        display:flex;
+        flex-direction:column;
+        width:100%;
+        max-width:none;
+        min-height:100dvh;
+        margin:0;
+        border-radius:0;
+        border-left:0;
+        border-right:0;
+        border-top:0;
+        border-bottom:0;
+        overflow:hidden;
+      }
+
+      .modal-head{
+        position:sticky;
+        top:0;
+        z-index:3;
+        flex:0 0 auto;
+        background:#111a2d;
+        padding:15px 16px;
+      }
+
+      .modal-head h2{
+        font-size:18px;
+      }
+
+      .modal-body{
+        flex:1 1 auto;
+        overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
+        padding:16px 16px calc(150px + env(safe-area-inset-bottom));
+        scroll-padding-bottom:calc(150px + env(safe-area-inset-bottom));
+      }
+
+      .modal-foot{
+        position:sticky;
+        bottom:0;
+        z-index:3;
+        flex:0 0 auto;
+        background:#111a2d;
+        padding:12px 16px max(12px, env(safe-area-inset-bottom));
+      }
+
+      .field{
+        gap:8px;
+      }
+
+      .field label{
+        font-size:13px;
+      }
+
+      .field input,
+      .field select{
+        min-height:48px;
+        width:100%;
+        font-size:16px;
+      }
+
+      .image-preview{
+        width:100%;
+        margin-bottom:12px;
+      }
+
+      .image-preview img{
+        width:100%;
+        max-width:100%;
+        height:auto;
+        max-height:260px;
+        object-fit:contain;
+      }
+
+      #imageInput{
+        width:100%;
+        min-height:48px;
+        padding:10px 0;
+      }
+
+      .toast{
+        left:12px;
+        right:12px;
+        bottom:max(12px, env(safe-area-inset-bottom));
+        max-width:none;
+        text-align:center;
+      }
+    }
+
+    @media(max-width:430px){
+      .top-actions{
+        grid-template-columns:1fr;
+      }
+
+      .stats{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .stat{
+        padding:12px;
+      }
+
+      .stat .value{
+        font-size:21px;
+      }
+
+      tbody td{
+        gap:10px;
+      }
+
+      tbody td::before{
+        flex-basis:72px;
+        font-size:10px;
+      }
+
+      .badge{
+        max-width:65%;
+      }
+
+      .qty-value{
+        min-width:62px;
+      }
+
+      .row-actions{
+        flex-direction:column;
+      }
+
+      .row-actions .btn{
+        width:100%;
+      }
+
+      .modal-body{
+        padding-bottom:calc(180px + env(safe-area-inset-bottom));
+        scroll-padding-bottom:calc(180px + env(safe-area-inset-bottom));
+      }
+
+      .modal-foot{
+        flex-direction:column-reverse;
+      }
+
+      .modal-foot .btn{
+        width:100%;
+        min-height:48px;
+      }
+    }
+
+
+    @media(max-width:700px){
+      .modal-backdrop{
+        overflow:hidden;
+      }
+
+      .modal{
+        display:block;
+        height:100dvh;
+        min-height:100dvh;
+        max-height:100dvh;
+        overflow-y:auto;
+        overflow-x:hidden;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      .modal-head{
+        position:sticky;
+        top:0;
+        z-index:5;
+      }
+
+      .modal-body{
+        overflow:visible;
+        padding:16px;
+        scroll-padding-bottom:0;
+      }
+
+      .modal-foot{
+        position:static;
+        padding:12px 16px calc(18px + env(safe-area-inset-bottom));
+        background:#111a2d;
+      }
+
+      .image-preview{
+        margin-bottom:16px;
+      }
+
+      #imageInput{
+        margin-bottom:12px;
+      }
+    }
+
+    @media(max-width:430px){
+      .modal-body{
+        padding-bottom:16px;
+        scroll-padding-bottom:0;
+      }
+
+      .modal-foot{
+        position:static;
+      }
+    }
+
+    @media print{
+      body{background:white;color:black}
+      .topbar,.stats,.toolbar,.footer-note,.row-actions,.modal-backdrop,.toast,.actions-col{display:none!important}
+      .qty-wrap{
+        display:inline-flex!important;
+        border:none!important;
+        background:transparent!important;
+      }
+      .qty-btn{display:none!important}
+      .qty-value{
+        min-width:0!important;
+        text-align:left!important;
+        font-weight:700!important;
+        color:#111!important;
+      }
+      .app{width:100%;padding:0}
+      .table-wrap{box-shadow:none;border:none}
+      table{min-width:0}
+      thead th{background:#f2f2f2;color:#333;border-color:#ddd}
+      tbody td{border-color:#ddd;color:#111}
+      .product-meta{color:#555}
+      .thumb{width:36px;height:36px;border-color:#ccc}
+      .badge{background:none!important;color:#111!important;border:1px solid #bbb!important}
+      body::before{
+        content:"Inventory Status Report";
+        display:block;
+        font-size:24px;
+        font-weight:800;
+        margin:0 0 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">S</div>
+        <div>
+          <h1>Stockly - inventory</h1>
+          <p>Data is stored locally in your browser.</br>Remember to export your data regularly as a backup.</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" id="exportBtn">Export data</button>
+        <button class="btn" id="importBtn">Import data</button>
+        <button class="btn" id="pdfBtn">Inventory report</button>
+        <button class="btn primary" id="addBtn">+ Add product</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden />
+      </div>
+    </header>
+
+    <section class="stats">
+      <article class="stat">
+        <div class="label">Products</div>
+        <div class="value" id="statProducts">0</div>
+        <div class="sub">number of items</div>
+      </article>
+      <article class="stat">
+        <div class="label">Total stock</div>
+        <div class="value" id="statQuantity">0</div>
+        <div class="sub">all units</div>
+      </article>
+      <article class="stat">
+        <div class="label">Low stock</div>
+        <div class="value" id="statLow">0</div>
+        <div class="sub">5 units or less</div>
+      </article>
+      <article class="stat">
+        <div class="label">Out of stock</div>
+        <div class="value" id="statOut">0</div>
+        <div class="sub">requires restocking</div>
+      </article>
+    </section>
+
+    <section class="toolbar">
+      <div class="search">
+        <span>⌕</span>
+        <input id="searchInput" type="search" placeholder="Search by name, SKU, or category..." />
+      </div>
+      <select id="categoryFilter">
+        <option value="">All categories</option>
+      </select>
+      <select id="sortSelect">
+        <option value="name">Name A–Z</option>
+        <option value="qtyAsc">Stock ascending</option>
+        <option value="qtyDesc">Stock descending</option>
+        <option value="newest">Newest</option>
+      </select>
+    </section>
+
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Stock</th>
+            <th class="actions-col" style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+      <div class="empty" id="emptyState" hidden>
+        <div class="icon">📦</div>
+        <strong>No products</strong>
+        <div style="margin-top:6px">Add your first product to the inventory.</div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Created by Dominik Grabowski
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle">Add product</h2>
+        <button class="btn ghost small" id="closeModal">✕</button>
+      </div>
+
+      <form id="productForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="field full">
+              <label>Product name *</label>
+              <input id="nameInput" required maxlength="80" placeholder="e.g. Bosch Drill" />
+            </div>
+
+            <div class="field">
+              <label>SKU / code</label>
+              <input id="skuInput" maxlength="40" placeholder="e.g. BOS-001" />
+            </div>
+
+            <div class="field">
+              <label>Category</label>
+              <input id="categoryInput" maxlength="50" placeholder="e.g. Power Tools" />
+            </div>
+
+            <div class="field">
+              <label>Stock quantity *</label>
+              <input id="quantityInput" type="number" min="0" step="1" value="0" required />
+            </div>
+
+            <div class="field">
+              <label>Unit</label>
+              <select id="unitInput">
+                <option>pcs.</option>
+                <option>pkg.</option>
+                <option>kg</option>
+                <option>l</option>
+                <option>m</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label>Product image</label>
+              <input id="imageInput" type="file" accept="image/*" />
+              <div class="image-preview" id="imagePreviewBox" hidden>
+                <img id="imagePreview" alt="Image preview" />
+                <div>
+                  <strong>Image preview</strong>
+                  <div style="font-size:12px;color:var(--muted);margin-top:4px">The image will be stored locally in your browser.</div>
+                  <button class="btn danger small" type="button" id="removeImageBtn" style="margin-top:9px">Remove image</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn" type="button" id="cancelBtn">Cancel</button>
+          <button class="btn primary" type="submit">Save product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "stockly_products_en_v1";
+
+    let products = loadProducts();
+    let editingId = null;
+    let currentImage = "";
+
+    const el = id => document.getElementById(id);
+
+    const table = el("productTable");
+    const emptyState = el("emptyState");
+    const modal = el("modal");
+    const form = el("productForm");
+
+    function uid(){
+      return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+    }
+
+    function loadProducts(){
+      try{
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      }catch{
+        return [];
+      }
+    }
+
+    function saveProducts(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+      render();
+    }
+
+    function escapeHtml(value=""){
+      return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function showToast(message){
+      const toast = el("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    function statusFor(qty){
+      if(qty <= 0) return ["Out of stock", "out"];
+      if(qty <= 5) return ["Low stock", "low"];
+      return ["Available", "ok"];
+    }
+
+    function renderStats(){
+      el("statProducts").textContent = products.length;
+      el("statQuantity").textContent = products.reduce((sum,p)=>sum+Number(p.quantity || 0),0);
+      el("statLow").textContent = products.filter(p=>p.quantity > 0 && p.quantity <= 5).length;
+      el("statOut").textContent = products.filter(p=>p.quantity <= 0).length;
+    }
+
+    function renderCategories(){
+      const current = el("categoryFilter").value;
+      const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"en"));
+      el("categoryFilter").innerHTML =
+        '<option value="">All categories</option>' +
+        categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      if(categories.includes(current)) el("categoryFilter").value = current;
+    }
+
+    function getVisibleProducts(){
+      const query = el("searchInput").value.trim().toLowerCase();
+      const category = el("categoryFilter").value;
+      const sort = el("sortSelect").value;
+
+      let list = products.filter(p => {
+        const haystack = [p.name,p.sku,p.category].join(" ").toLowerCase();
+        return (!query || haystack.includes(query)) && (!category || p.category === category);
+      });
+
+      list.sort((a,b)=>{
+        if(sort === "qtyAsc") return a.quantity - b.quantity;
+        if(sort === "qtyDesc") return b.quantity - a.quantity;
+        if(sort === "newest") return (b.createdAt || 0) - (a.createdAt || 0);
+        return a.name.localeCompare(b.name,"en");
+      });
+
+      return list;
+    }
+
+    function renderTable(){
+      const list = getVisibleProducts();
+      emptyState.hidden = list.length !== 0;
+      table.innerHTML = list.map(p => {
+        const [status,statusClass] = statusFor(Number(p.quantity));
+        const image = p.image
+          ? `<img src="${p.image}" alt="">`
+          : `<div class="thumb placeholder">📦</div>`;
+
+        return `
+          <tr>
+            <td data-label="Product">
+              <div class="product-cell">
+                ${p.image ? `<div class="thumb">${image}</div>` : image}
+                <div>
+                  <div class="product-name">${escapeHtml(p.name)}</div>
+                  <div class="product-meta">${p.sku ? "SKU: " + escapeHtml(p.sku) : "No SKU"}</div>
+                </div>
+              </div>
+            </td>
+            <td data-label="Category">${escapeHtml(p.category || "—")}</td>
+            <td data-label="Status"><span class="badge ${statusClass}">● ${status}</span></td>
+            <td data-label="Stock">
+              <div class="qty-wrap">
+                <button class="qty-btn" title="Subtract 1" onclick="changeQty('${p.id}',-1)">−</button>
+                <div class="qty-value">${Number(p.quantity)} ${escapeHtml(p.unit || "pcs.")}</div>
+                <button class="qty-btn" title="Add 1" onclick="changeQty('${p.id}',1)">+</button>
+              </div>
+            </td>
+            <td class="actions-col" data-label="Actions">
+              <div class="row-actions">
+                <button class="btn small" onclick="editProduct('${p.id}')">Edit</button>
+                <button class="btn danger small" onclick="deleteProduct('${p.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function render(){
+      renderStats();
+      renderCategories();
+      renderTable();
+    }
+
+    function openModal(product=null){
+      editingId = product?.id || null;
+      currentImage = product?.image || "";
+
+      el("modalTitle").textContent = product ? "Edit product" : "Add product";
+      el("nameInput").value = product?.name || "";
+      el("skuInput").value = product?.sku || "";
+      el("categoryInput").value = product?.category || "";
+      el("quantityInput").value = product?.quantity ?? 0;
+      el("unitInput").value = product?.unit || "pcs.";
+      el("imageInput").value = "";
+
+      updateImagePreview();
+      modal.classList.add("open");
+      setTimeout(()=>el("nameInput").focus(),50);
+    }
+
+    function closeModal(){
+      modal.classList.remove("open");
+      form.reset();
+      editingId = null;
+      currentImage = "";
+      el("quantityInput").value = 0;
+      el("unitInput").value = "pcs.";
+      updateImagePreview();
+    }
+
+    function updateImagePreview(){
+      const box = el("imagePreviewBox");
+      if(currentImage){
+        el("imagePreview").src = currentImage;
+        box.hidden = false;
+      }else{
+        box.hidden = true;
+        el("imagePreview").removeAttribute("src");
+      }
+    }
+
+    function resizeImage(file){
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = e => {
+          const img = new Image();
+          img.onerror = reject;
+          img.onload = () => {
+            const max = 700;
+            let w = img.width;
+            let h = img.height;
+            if(w > h && w > max){ h = Math.round(h * max / w); w = max; }
+            else if(h > max){ w = Math.round(w * max / h); h = max; }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext("2d").drawImage(img,0,0,w,h);
+            resolve(canvas.toDataURL("image/jpeg",.78));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    window.changeQty = function(id, delta){
+      const product = products.find(p=>p.id===id);
+      if(!product) return;
+      product.quantity = Math.max(0, Number(product.quantity) + delta);
+      product.updatedAt = Date.now();
+      saveProducts();
+    }
+
+    window.editProduct = function(id){
+      const product = products.find(p=>p.id===id);
+      if(product) openModal(product);
+    }
+
+    window.deleteProduct = function(id){
+      const product = products.find(p=>p.id===id);
+      if(!product) return;
+      if(confirm(`Delete product "${product.name}"?`)){
+        products = products.filter(p=>p.id!==id);
+        saveProducts();
+        showToast("Product deleted.");
+      }
+    }
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const name = el("nameInput").value.trim();
+      const quantity = Math.max(0, Number(el("quantityInput").value || 0));
+
+      if(!name) return;
+
+      const data = {
+        name,
+        sku: el("skuInput").value.trim(),
+        category: el("categoryInput").value.trim(),
+        quantity,
+        unit: el("unitInput").value,
+        image: currentImage,
+        updatedAt: Date.now()
+      };
+
+      if(editingId){
+        const index = products.findIndex(p=>p.id===editingId);
+        if(index >= 0) products[index] = {...products[index], ...data};
+        showToast("Product updated.");
+      }else{
+        products.unshift({
+          id:uid(),
+          createdAt:Date.now(),
+          ...data
+        });
+        showToast("Product added.");
+      }
+
+      saveProducts();
+      closeModal();
+    });
+
+    el("imageInput").addEventListener("change", async e => {
+      const file = e.target.files?.[0];
+      if(!file) return;
+      if(file.size > 8 * 1024 * 1024){
+        alert("The image is too large. Maximum file size is 8 MB.");
+        e.target.value = "";
+        return;
+      }
+      currentImage = await resizeImage(file);
+      updateImagePreview();
+    });
+
+    el("removeImageBtn").addEventListener("click", ()=>{
+      currentImage = "";
+      el("imageInput").value = "";
+      updateImagePreview();
+    });
+
+    el("addBtn").addEventListener("click", ()=>openModal());
+    el("closeModal").addEventListener("click", closeModal);
+    el("cancelBtn").addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
+    document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+    el("searchInput").addEventListener("input",renderTable);
+    el("categoryFilter").addEventListener("change",renderTable);
+    el("sortSelect").addEventListener("change",renderTable);
+
+    el("exportBtn").addEventListener("click", ()=>{
+      const payload = {
+        app:"Stockly",
+        version:1,
+        exportedAt:new Date().toISOString(),
+        products
+      };
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = `stockly-backup-${date}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("JSON backup exported.");
+    });
+
+    el("importBtn").addEventListener("click", ()=>el("importFile").click());
+
+    el("importFile").addEventListener("change", async e => {
+      const file = e.target.files?.[0];
+      if(!file) return;
+
+      try{
+        const data = JSON.parse(await file.text());
+        const imported = Array.isArray(data) ? data : data.products;
+        if(!Array.isArray(imported)) throw new Error();
+
+        if(!confirm(`The import contains ${imported.length} products. Replace the current data?`)){
+          e.target.value = "";
+          return;
+        }
+
+        products = imported.map(p => ({
+          id:p.id || uid(),
+          name:String(p.name || "Unnamed product"),
+          sku:String(p.sku || ""),
+          category:String(p.category || ""),
+          quantity:Math.max(0, Number(p.quantity || 0)),
+          unit:String(p.unit || "pcs."),
+          image:String(p.image || ""),
+          createdAt:Number(p.createdAt || Date.now()),
+          updatedAt:Number(p.updatedAt || Date.now())
+        }));
+
+        saveProducts();
+        showToast("Data imported successfully.");
+      }catch{
+        alert("Failed to import the file. Make sure it is a valid Stockly JSON backup.");
+      }finally{
+        e.target.value = "";
+      }
+    });
+
+    el("pdfBtn").addEventListener("click", ()=>{
+      const previousSearch = el("searchInput").value;
+      const previousCategory = el("categoryFilter").value;
+      el("searchInput").value = "";
+      el("categoryFilter").value = "";
+      renderTable();
+
+      const date = new Date().toLocaleString("en-GB");
+      const oldTitle = document.title;
+      document.title = `Stockly - inventory report - ${new Date().toISOString().slice(0,10)} - Generated by: https://dominikgrabowski.pl`;
+
+      const marker = document.createElement("div");
+      marker.id = "printDate";
+      marker.style.display = "none";
+      marker.textContent = "Generated: " + date;
+      document.body.appendChild(marker);
+
+      window.print();
+
+      marker.remove();
+      document.title = oldTitle;
+      el("searchInput").value = previousSearch;
+      renderCategories();
+      el("categoryFilter").value = previousCategory;
+      renderTable();
+    });
+
+    if(!localStorage.getItem(STORAGE_KEY)){
+      products = [
+        {id:uid(),name:"Product 1",sku:"PRO-001",category:"Gadgets",quantity:17,unit:"pcs.",image:"",createdAt:Date.now()-3000,updatedAt:Date.now()},
+        {id:uid(),name:"Product 2",sku:"PRO-002",category:"Gadgets",quantity:4,unit:"pcs.",image:"",createdAt:Date.now()-2000,updatedAt:Date.now()},
+        {id:uid(),name:"Product 3",sku:"PRO-003",category:"Accessories",quantity:0,unit:"pkg.",image:"",createdAt:Date.now()-1000,updatedAt:Date.now()}
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    }
+
+    render();
+  </script>
+</body>
+</html>
